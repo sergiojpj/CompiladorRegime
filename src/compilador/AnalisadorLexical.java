@@ -23,40 +23,41 @@ public class AnalisadorLexical {
     JFileChooser choice;
     int option, linha = 0;
     char caracter;
+    File file;
     FileReader read;
     BufferedReader reader;
     Token token;
     private int count = 0;
     
-    public AnalisadorLexical() throws FileNotFoundException, IOException{
-    
-        choice = new JFileChooser();
-        option = choice.showOpenDialog(null);
+    public AnalisadorLexical(File file2) throws FileNotFoundException, IOException{
         
-        if(JFileChooser.APPROVE_OPTION == option){
-            
-            File file = choice.getSelectedFile();
-            read = new FileReader(file);
-            reader = new BufferedReader(read);
-            
-            caracter = (char)reader.read();
-            while(reader.ready()){
-                while(caracter == ' ' || caracter == '{' || caracter == '\n' && reader.ready() || caracter == '\r' || caracter == '\t'){
-
-                    if(caracter == '\n')
-                        linha++;
-                    if(caracter == '{')
-                        while(caracter != '}')
-                            caracter = (char)reader.read();
-                    caracter = (char)reader.read();
-                }
-                token = pegaToken();
-                System.out.println(token);
-                count++;          
+        file = file2;
+        read = new FileReader(file);
+        reader = new BufferedReader(read);
+        caracter = ' ';
+    }
+    
+    public Token getToken() throws IOException{
+        
+        //caracter = (char)reader.read();
+        while(reader.ready()){
+            while(caracter == ' ' || caracter == '{' || caracter == '\n' && reader.ready() || caracter == '\r' || caracter == '\t'){
+                if(caracter == '\n')
+                    linha++;
+                if(caracter == '{')
+                    while(caracter != '}')
+                        caracter = (char)reader.read();
+                caracter = (char)reader.read();
             }
-            System.out.println(count);
-            System.out.println("Lexico Sucesso");
+            token = pegaToken();
+            System.out.println(token);
+            return token;          
         }
+        //System.out.println(count);
+        //System.out.println("Lexico Sucesso");
+        token = pegaToken();
+        System.out.println(token);
+        return token;
     }
 
     private Token pegaToken() throws IOException {
@@ -69,7 +70,7 @@ public class AnalisadorLexical {
             return trataAtribuicao();
         else if(caracter == '+' || caracter == '-' || caracter == '*')
             return trataOpAritmetico();
-        else if(caracter == '>' || caracter == '<' || caracter == '=')
+        else if(caracter == '>' || caracter == '<' || caracter == '=' || caracter == '!' )
             return trataOpRelacional();
         else if(caracter == ';' || caracter == ',' || caracter == '(' || caracter == ')' || caracter == '.')
             return trataPontuacao();
@@ -195,7 +196,6 @@ public class AnalisadorLexical {
         String id;
         id = String.valueOf(caracter);
         caracter = (char) reader.read();
-        
         if(caracter == '='){
             
             switch(id){
@@ -276,6 +276,10 @@ public class AnalisadorLexical {
         }else
             return new Token(id,"Sdoispontos");
             
+    }
+
+   public int getLinha() {
+        return linha;
     }
 }
 

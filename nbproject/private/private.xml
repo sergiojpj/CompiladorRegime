@@ -5,6 +5,8 @@
         <group>
             <file>file:/Users/Sergio/NetBeansProjects/Compilador/src/compilador/AnalisadorLexical.java</file>
             <file>file:/Users/Sergio/NetBeansProjects/Compilador/src/compilador/Compilador.java</file>
+            <file>file:/Users/Sergio/NetBeansProjects/Compilador/src/compilador/AnalisadorSintatico.java</file>
+            <file>file:/Users/Sergio/NetBeansProjects/Compilador/src/compilador/Simbolo.java</file>
             <file>file:/Users/Sergio/NetBeansProjects/Compilador/src/compilador/Token.java</file>
         </group>
     </open-files>

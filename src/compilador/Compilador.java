@@ -17,10 +17,12 @@ public class Compilador {
 
     /**
      * @param args the command line arguments
+     * @throws java.io.FileNotFoundException
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
         // TODO code application logic here
-        AnalisadorLexical lexico = new AnalisadorLexical();
+        AnalisadorSintatico sintatico = new AnalisadorSintatico();
+        sintatico.setVisible(true);
     }
     
 }
