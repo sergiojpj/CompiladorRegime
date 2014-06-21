@@ -36,9 +36,12 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     Simbolo simbolo;
     int flag, nivel;
     LinkedList<Simbolo> tabSimb = new LinkedList<Simbolo>();
+    LinkedList<Simbolo> expressao = new LinkedList<Simbolo>();
+    LinkedList<Simbolo> pos;
     int PosMemoria = 0;
     int rotulo;
     int qtdRemovida = 0;
+    private LinkedList<Simbolo> posFixa;
 
             
     public AnalisadorSintatico() throws FileNotFoundException, IOException {
@@ -546,6 +549,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         token = lexico.getToken();
         analisaExpressao();
         
+        
+        pos = posFixa();
+        
         if("Sfaca".equals(token.getSimbolo())){
             token = lexico.getToken();
             analisaComandoSimples();
@@ -556,6 +562,8 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         
         token = lexico.getToken();
         analisaExpressao();
+        
+        pos = posFixa();
         
         if("Sentao".equals(token.getSimbolo())){
             token = lexico.getToken();
@@ -574,6 +582,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         analisaExpressaoSimples();
         
         if("Smaior".equals(token.getSimbolo()) || "Smaiorig".equals(token.getSimbolo()) || "Sig".equals(token.getSimbolo()) || "Smenor".equals(token.getSimbolo()) || "Smenorig".equals(token.getSimbolo()) || "Sdif".equals(token.getSimbolo())){
+            addExpressao(token.getLexema(), token.getSimbolo(), "4");//Semantico
             token = lexico.getToken();
             analisaExpressaoSimples();
         }
@@ -582,11 +591,17 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     private void analisaExpressaoSimples() throws IOException {
         
-        if("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo()))
+        if("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo())){
+            addExpressao(token.getLexema(), token.getSimbolo(), "0");//Semantico
             token = lexico.getToken();
+        }
         analisaTermo();
         
         while("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo()) || "Sou".equals(token.getSimbolo())){
+            if("Sou".equals(token.getSimbolo()))
+                addExpressao(token.getLexema(), token.getSimbolo(), "5");//Semantico
+            else
+                addExpressao(token.getLexema(), token.getSimbolo(), "3");//Semantico
             token = lexico.getToken();
             analisaTermo();
         }
@@ -597,6 +612,10 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         analisaFator();
         
         while("Smult".equals(token.getSimbolo()) || "Sdiv".equals(token.getSimbolo()) || "Se".equals(token.getSimbolo())){
+            if("Se".equals(token.getSimbolo()))
+                addExpressao(token.getLexema(), token.getSimbolo(), "5");//Semantico
+            else
+                addExpressao(token.getLexema(), token.getSimbolo(), "2");//Semantico
             token = lexico.getToken();
             analisaFator();
         }
@@ -605,32 +624,44 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     private void analisaFator() throws IOException {
         
         if("Sidentificador".equals(token.getSimbolo())){
-            //sepesquisatabela
-                //entao
-                    //se tab int ou bool
-                        //entao
-                            analisaChamadaFuncao();
-                            token = lexico.getToken();
-                        //senao erro    
+            String f = seFuncao(token.getSimbolo());
+            
+            if("funcao".equals(f))
+                addExpressao(token.getLexema(), "funcao", "1");//Semantico
+            else if ("procedimento".equals(f))
+                jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":procedimento dentro de expressao.");
+            else
+                addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
+            
+            analisaChamadaFuncao();
+            token = lexico.getToken(); 
         }else{
-            if("Snumero".equals(token.getSimbolo()))
+            if("Snumero".equals(token.getSimbolo())){
+                addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
                 token = lexico.getToken();
+            }
             else{
                 if("Snao".equals(token.getSimbolo())){
+                    addExpressao(token.getLexema(), token.getSimbolo(), "0");//Semantico
                     token = lexico.getToken();
                     analisaFator();
                 }else{
                     if("Sabre_parenteses".equals(token.getSimbolo())){
+                        addExpressao(token.getLexema(), token.getSimbolo(), "6");//Semantico
                         token = lexico.getToken();
                         analisaExpressao();
                         
-                        if("Sfecha_parenteses".equals(token.getSimbolo()))
+                        if("Sfecha_parenteses".equals(token.getSimbolo())){
+                            addExpressao(token.getLexema(), token.getSimbolo(), "7");//Semantico
                             token = lexico.getToken();
+                        }
                         else
                             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":')' esperado.");
                     }else{
-                        if("verdadeiro".equals(token.getLexema()) || "falso".equals(token.getLexema()))
+                        if("verdadeiro".equals(token.getLexema()) || "falso".equals(token.getLexema())){
+                            addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
                             token = lexico.getToken();
+                        }
                         else
                             jTextArea2.setText("Erro linha:" + lexico.getLinha() + "ERRO.");
                     }
@@ -645,6 +676,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         
         token = lexico.getToken();
         analisaExpressao();
+        pos = posFixa();
         
     }
 
@@ -756,5 +788,78 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         
         return simb;
     }
+
+    private String seFuncao(String token) {
+        
+        int i = 0;
+        String retorna = null;
+
+        while (i < tabSimb.size()) {
+            if (token.equals(tabSimb.get(i).getLexema())) {
+                retorna = tabSimb.get(i).getEscopo();
+                i = tabSimb.size();
+            }
+            i++;
+        }
+        return retorna;
+
+    }
+
+    private void addExpressao(String lexema, String tipo, String peso) {
+        
+        Simbolo s = new Simbolo();
+
+        s.setLexema(lexema);
+        s.setTipo(tipo);
+
+        if (null != peso)
+            switch (peso) {
+            case "0":
+                s.setId(0);
+                break;
+            case "1":
+                s.setId(1);
+                break;
+            case "2":
+                s.setId(2);
+                break;
+            case "3":
+                s.setId(3);
+                break;
+            case "4":
+                s.setId(4);
+                break;
+            case "5":
+                s.setId(5);
+                break;
+            case "6":
+                s.setId(6);
+                break;
+            case "7":
+                s.setId(7);
+                break;
+            case " ":
+                s.setId(8);
+                break;
+        }
+        
+
+        expressao.add(s);
+
+    }
+
+    private LinkedList<Simbolo> posFixa() {
+        posFixa = new LinkedList<Simbolo>();
+        
+        System.out.print("\n\n");
+        for (Simbolo expressao1 : expressao) {
+            System.out.print(expressao1.getLexema());
+        }
+        System.out.print("\n\n");
+        
+        return posFixa;
+    }
+
+
     
 }
