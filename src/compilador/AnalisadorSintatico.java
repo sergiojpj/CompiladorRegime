@@ -7,9 +7,11 @@
 package compilador;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -34,13 +36,18 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     File file;
     Token token;
     Simbolo simbolo;
-    int flag, nivel;
+    int nivel;
     LinkedList<Simbolo> tabSimb = new LinkedList<Simbolo>();
     LinkedList<Simbolo> expressao = new LinkedList<Simbolo>();
     LinkedList<Simbolo> pos;
     int PosMemoria = 0;
     int rotulo;
     int qtdRemovida = 0;
+    private LinkedList<Simbolo> pilha;
+    int topo = 0;
+    String comando = null;
+    private int qtdVar;
+    private boolean flag;
     private LinkedList<Simbolo> posFixa;
 
             
@@ -65,6 +72,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -94,6 +102,14 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             }
         });
         jMenu1.add(jMenuItem1);
+
+        jMenuItem2.setText("jMenuItem2");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem2);
 
         jMenuBar1.add(jMenu1);
 
@@ -178,6 +194,20 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+
+        // TODO add your handling code here:
+        
+        try {
+            BufferedWriter saida = new BufferedWriter(new FileWriter("C://Users//SergioJosé//Desktop/Saida.txt"));
+            saida.write(comando);
+            saida.close();
+        } catch (IOException e) {
+            System.out.println("Erro ao gravar o arquivo\n");
+        }
+        
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -226,6 +256,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextArea jTextArea1;
@@ -241,6 +272,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             nivel = 0;
             token = lexico.getToken();
             
+            //Geracao
+            comando = "    " + "START   " + "    " + "    " + "\n";
+            
             if("Sidentificador".equals(token.getSimbolo())){
                 
                 //SEMANTICO
@@ -253,6 +287,16 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                     if("Sponto".equals(token.getSimbolo())){
                         imprimirTabSimb();
                         qtdRemovida = removerVarPro();
+                        
+                        //Geracao
+                        if (qtdRemovida > 0) {
+                            topo = topo - qtdRemovida;
+                            PosMemoria = PosMemoria - qtdRemovida;
+                            comando = comando + "    " + "DALLOC  " + topo + "   " + qtdRemovida + "   " + "\n";
+                        }
+
+                        comando = comando + "    " + "HLT     " + "    " + "    " + "\n";
+                        
                         jTextArea2.setText("Compilado com sucesso.");
                         System.out.println("\n\n");
                     }else
@@ -305,7 +349,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                 else{
                     insertTab(token.getLexema(), "variavel", nivel);
                     token = lexico.getToken();
-
+                    qtdVar++;
                     if("Svirgula".equals(token.getSimbolo()) || "Sdoispontos".equals(token.getSimbolo())){
 
                         if("Svirgula".equals(token.getSimbolo())){
@@ -320,6 +364,12 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             }else
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
         }while(!"Sdoispontos".equals(token.getSimbolo()));
+        
+        //Geracao
+        comando = comando + "    " + "ALLOC    " + topo + "   " + qtdVar + "   " + "\n";
+
+        topo = qtdVar + topo;
+        qtdVar = 0;
         
         token = lexico.getToken();
         analisaTipo();
@@ -338,16 +388,22 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     private void analisaSubRotinas() throws IOException {
         
-        //flag = 0;
+        int rotuloInicio = 0;
+        flag = false;
         
         if("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())){
-            //auxrot = rotulo;
-            //GERA
-            //rotulo = rotulo +1;
-            flag = 1;
+            
+            //Geracao
+            comando = comando + "    " + "JMP     " + "L" + rotulo + "    " + "    " + "\n";
+            rotuloInicio = rotulo;
+            rotulo = rotulo + 1;
+            flag = true;
         }
         
         while("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())){
+            
+            //Geracao
+            comando = comando + "L" + rotulo + "  NULL    " + "    " + "    " + "\n";
             
             if("Sprocedimento".equals(token.getSimbolo()))
                 analisaDecProcedimento();
@@ -360,8 +416,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":';' esperado."); 
         }
         
-        //if(flag == 1)
-            //GERA
+        //Geracao
+        if (flag)
+            comando = comando + "L" + rotuloInicio + "  NULL    " + "    " + "    " + "\n";
     }
 
     private void analisaDecProcedimento() throws IOException {
@@ -374,6 +431,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             else{
                 //SEMANTICO
                 insertTab(token.getLexema(), "procedimento", nivel);
+                
+                rotulo = rotulo + 1;//Geracao
+                
                 colocaTipo("procedimento");
                 
                 token = lexico.getToken();
@@ -499,8 +559,8 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                 
                     Simbolo simb = getSimbolo(token.getLexema());
                     if("Sinteiro".equals(simb.getTipo())){
-                        jTextArea2.setText("Entrou");
-                        //GERACAO
+                        comando = comando + "    " + "RD      " + "    " + "    " + "\n";
+                        comando = comando + "    " + "STR     " + simb.getEndereco() + "    " + "\n";
                     }else
                         jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Leia com tipo nao esperado.");
                     
@@ -527,8 +587,8 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                 
                 Simbolo simb = getSimbolo(token.getLexema());
                 if("Sinteiro".equals(simb.getTipo())){
-                    jTextArea2.setText("Entrou");
-                    //GERACAO
+                    comando = comando + "    " + "LDV     " + simb.getEndereco() + "    " + "\n";
+                    comando = comando + "    " + "PRN     " + "    " + "    " + "\n";
                 }else
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Leia com tipo nao esperado.");
 
@@ -546,15 +606,42 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     private void analisaEnquanto() throws IOException {
         
+        //Geracao
+        int auxrot1, auxrot2;
+        auxrot1 = rotulo;
+        
+        comando = comando + "L" + rotulo + "  NULL    " + "    " + "    " + "\n";
+        
+        rotulo = rotulo + 1;
+        
         token = lexico.getToken();
         analisaExpressao();
         
-        
         pos = posFixa();
         
+        for(int i = 0; expressao.size() > 0;i++)
+            expressao.removeFirst();
+        
+        removeParenteses();
+        
+        for(int i = 0;i<pos.size();i++)
+            System.out.println(pos.get(i));
+                
+        gerarCodPosFixa();
+        
         if("Sfaca".equals(token.getSimbolo())){
+            
+            //Geracao
+            auxrot2 = rotulo;
+            comando = comando + "    " + "JMPF    " + "L" + rotulo + "    " + "    " + "\n";
+            rotulo = rotulo + 1;
+            
             token = lexico.getToken();
             analisaComandoSimples();
+            
+            //Geracao
+            comando = comando + "    " + "JMP      " + "L" + auxrot1 + "    " + "    " + "\n";
+            comando = comando + "L" + auxrot2 + "  NULL    " + "    " + "    " + "\n";
         }
     }
 
@@ -565,14 +652,42 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         
         pos = posFixa();
         
+        for(int i = 0; expressao.size() > 0;i++)
+            expressao.removeFirst();
+        
+        removeParenteses();
+        
+        for(int i = 0;i<pos.size();i++)
+            System.out.println(pos.get(i));
+        
+        gerarCodPosFixa();
+        
+        //Geracao
+        int jmpf = this.rotulo;
+        comando = comando + "    " + "JMPF    " + "L" + jmpf + "    " + "\n";
+        rotulo = rotulo + 1;
+        
         if("Sentao".equals(token.getSimbolo())){
             token = lexico.getToken();
             analisaComandoSimples();
             
             if("Ssenao".equals(token.getSimbolo())){
+                
+                //Geracao
+                int jmp = this.rotulo;
+                comando = comando + "    " + "JMP     " + "L" + jmp + "    " + "\n";
+                rotulo = rotulo + 1;
+                comando = comando + "L" + jmpf + "  NULL    " + "    " + "    " + "\n";
+                //FIM Geracao
+                
                 token = lexico.getToken();
                 analisaComandoSimples();
-            }
+                
+                //Geracao
+                comando = comando + "L" + jmp + "  NULL    " + "    " + "    " + "\n";
+            }else
+                //Geracao
+                comando = comando + "L" + jmpf + "  NULL    " + "    " + "    " + "\n";
         }else
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Palavra reservada 'entao' esperado.");
     }
@@ -674,9 +789,24 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     private void analisaAtribuicao() throws IOException {
         
+        Simbolo s = getSimbolo(token.getLexema());
+        
         token = lexico.getToken();
         analisaExpressao();
         pos = posFixa();
+        
+        for(int i = 0; expressao.size() > 0;i++)
+            expressao.removeFirst();
+        
+        removeParenteses();
+        
+        gerarCodPosFixa();
+        
+        for(int i = 0;i<pos.size();i++)
+            System.out.println(pos.get(i));
+        
+//        if (!"funcao".equals(s.getEscopo()))
+  //          comando = comando + "    " + "STR     " + s.getEndereco() + "    " + "\n";
         
     }
 
@@ -850,14 +980,128 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     private LinkedList<Simbolo> posFixa() {
         posFixa = new LinkedList<Simbolo>();
-        
+        pilha = new LinkedList<Simbolo>();
         System.out.print("\n\n");
         for (Simbolo expressao1 : expressao) {
             System.out.print(expressao1.getLexema());
         }
         System.out.print("\n\n");
         
+        Simbolo s;
+    	int i = 0;
+
+    	while (i < expressao.size()) {
+
+            s = expressao.get(i);
+
+            if (s.getId() == 1) {
+                posFixa.add(s);
+            }else if (s.getId() != -1) {
+            while (pilha.size() > 0 && (s.getId() < pilha.getLast().getId()) && (s.getId() != 6)) {
+                    posFixa.add(pilha.getLast());
+                    pilha.removeLast();
+            }
+            pilha.addLast(s);
+            }
+            i++;
+    	}
+
+    	while (pilha.size() > 0) {
+        	posFixa.add(pilha.getLast());
+        	pilha.removeLast();
+    	}
+        
+    	i = 0;
+    	while (i < posFixa.size()) {
+            System.out.println(posFixa.get(i).getLexema());
+   	 
+    	i++;
+        }
+
         return posFixa;
+    }
+
+    private void removeParenteses() {
+        
+        int i = 0;
+        while (i < pos.size()) {
+            if ((pos.get(i).getId() == 6 && "Sabre_parenteses".equals(pos.get(i).getTipo())) || (pos.get(i).getId() == 7 && "Sfecha_parenteses".equals(pos.get(i).getTipo()))) {
+                pos.remove(i);
+                i--;
+            }
+            i++;
+        }
+
+        
+    }
+
+    private void gerarCodPosFixa() {
+        
+        int i;
+        if (pos.size() == 1) {
+            if ("Snumero".equals(pos.getFirst().getTipo()))
+                comando = comando + "    " + "LDC     " + pos.getFirst().getLexema() + "  " + "    " + "\n";
+            else if ("funcao".equals(pos.getFirst().getTipo())) {
+                Simbolo s = getSimbolo(pos.getFirst().getLexema());
+                comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
+            }else if ("procedimento".equals(pos.getFirst().getTipo())){
+                Simbolo s = getSimbolo(pos.getFirst().getLexema());
+                comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
+            } else if ("Sidentificador".equals(pos.getFirst().getTipo())) {
+                Simbolo s = getSimbolo(pos.getFirst().getLexema());
+                comando = comando + "    " + "LDV     " + s.getEndereco() + "  " + "    " + "\n";
+            } else if ("Sverdadeiro".equals(pos.getFirst().getTipo()))
+                comando = comando + "    " + "LDC     " + 1 + "  " + "    " + "\n";
+            else if ("Sfalso".equals(pos.getFirst().getTipo()))
+                comando = comando + "    " + "LDC     " + 0 + "  " + "    " + "\n";
+        } else {
+            i = 0;
+            while (i < pos.size()) {
+                if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3)
+                    comando = comando + "    " + "ADD     " + "    " + "    " + "\n";
+                else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3)
+                    comando = comando + "    " + "SUB     " + "    " + "    " + "\n";
+                else if ("*".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2)
+                    comando = comando + "    " + "MULT     " + "    " + "    " + "\n";
+                else if ("div".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2)
+                    comando = comando + "    " + "DIVI     " + "    " + "    " + "\n";
+                else if ("<".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CME     " + "    " + "    " + "\n";
+                else if ("<=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CMEQ     " + "    " + "    " + "\n";
+                else if (">".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CMA     " + "    " + "    " + "\n";
+                else if (">=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CMAQ     " + "    " + "    " + "\n";
+                else if ("=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CEQ     " + "    " + "    " + "\n";
+                else if ("!=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                    comando = comando + "    " + "CDIF     " + "    " + "    " + "\n";
+                else if ("e".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5)
+                    comando = comando + "    " + "AND     " + "    " + "    " + "\n";
+                else if ("ou".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5)
+                    comando = comando + "    " + "OR      " + "    " + "    " + "\n";
+                else if ("nao".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                    comando = comando + "    " + "NEG     " + "    " + "    " + "\n";
+                else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                    comando = comando + "    " + "INV     " + "    " + "    " + "\n";
+                else if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                    comando = comando + "    " + "INV     " + "    " + "    " + "\n";
+                else if ("Sidentificador".equals(pos.get(i).getTipo())){
+                    Simbolo s = getSimbolo(pos.get(i).getLexema());
+                    comando = comando + "    " + "LDV     " + s.getEndereco() + "  " + "    " + "\n";
+                } else if ("Snumero".equals(pos.get(i).getTipo()))
+                    comando = comando + "    " + "LDC     " + pos.get(i).getLexema() + "  " + "    " + "\n";
+                else if ("funcao".equals(pos.get(i).getTipo())){
+                    Simbolo s = getSimbolo(pos.get(i).getLexema());
+                    comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
+                } else if ("Sverdadeiro".equals(pos.get(i).getTipo()))
+                    comando = comando + "    " + "LDC     " + 1 + "  " + "    " + "\n";
+                else if ("Sfalso".equals(pos.get(i).getTipo()))
+                    comando = comando + "    " + "LDC     " + 0 + "  " + "    " + "\n";
+                i++;
+            }
+        }
     }
 
 
