@@ -41,7 +41,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     LinkedList<Simbolo> expressao = new LinkedList<Simbolo>();
     LinkedList<Simbolo> pos;
     int PosMemoria = 0;
-    int rotulo;
+    int rotulo = 0;
     int qtdRemovida = 0;
     private LinkedList<Simbolo> pilha;
     int topo = 0;
@@ -472,7 +472,8 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                     token = lexico.getToken();
                     
                     if("Sinteiro".equals(token.getSimbolo()) || "Sbooleano".equals(token.getSimbolo())){
-                        //SEMANTICO
+                        
+                        rotulo = rotulo + 1;
                         colocaTipo(token.getSimbolo());
                         
                         token = lexico.getToken();
