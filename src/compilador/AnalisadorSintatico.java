@@ -49,6 +49,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     private int qtdVar;
     private boolean flag;
     private LinkedList<Simbolo> posFixa;
+    private Token aux;
 
             
     public AnalisadorSintatico() throws FileNotFoundException, IOException {
@@ -103,7 +104,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
-        jMenuItem2.setText("jMenuItem2");
+        jMenuItem2.setText("Salvar arquivo");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -199,7 +200,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         // TODO add your handling code here:
         
         try {
-            BufferedWriter saida = new BufferedWriter(new FileWriter("C://Users//SergioJosé//Desktop/Saida.txt"));
+            BufferedWriter saida = new BufferedWriter(new FileWriter("C://Users//sergio.junior//Desktop/Codigo.txt"));
             saida.write(comando);
             saida.close();
         } catch (IOException e) {
@@ -539,11 +540,12 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     }
 
     private void analisaAtribChProc() throws IOException {
+        aux = token;
         
         token = lexico.getToken();
         
         if("Satribuicao".equals(token.getSimbolo()))
-            analisaAtribuicao();
+            analisaAtribuicao(aux);
         else
             chamadaProcedimento();
     }
@@ -787,9 +789,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         }
     }
 
-    private void analisaAtribuicao() throws IOException {
+    private void analisaAtribuicao(Token aux) throws IOException {
         
-        Simbolo s = getSimbolo(token.getLexema());
+        Simbolo s = getSimbolo(aux.getLexema());
         
         token = lexico.getToken();
         analisaExpressao();
@@ -805,8 +807,8 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         for(int i = 0;i<pos.size();i++)
             System.out.println(pos.get(i));
         
-//        if (!"funcao".equals(s.getEscopo()))
-  //          comando = comando + "    " + "STR     " + s.getEndereco() + "    " + "\n";
+        if (!"funcao".equals(s.getEscopo()))
+            comando = comando + "    " + "STR     " + s.getEndereco() + "    " + "\n";
         
     }
 
