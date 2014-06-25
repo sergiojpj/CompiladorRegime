@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package compilador;
 
 import java.io.BufferedReader;
@@ -28,9 +27,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
 
     /**
      * Creates new form AnalisadorSintatico
+     *
      * @throws java.io.FileNotFoundException
      */
-    
     BufferedReader reader;
     AnalisadorLexical lexico;
     File file;
@@ -47,11 +46,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     int topo = 0;
     String comando = null;
     private int qtdVar;
-    private boolean flag;
     private LinkedList<Simbolo> posFixa;
     private Token aux;
 
-            
     public AnalisadorSintatico() throws FileNotFoundException, IOException {
         initComponents();
     }
@@ -148,22 +145,22 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        
+
         try {
             analisadorSintatico();
         } catch (IOException ex) {
             Logger.getLogger(AnalisadorSintatico.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
         JFileChooser choice = new JFileChooser();
         int option = choice.showOpenDialog(null);
-        
-        if(JFileChooser.APPROVE_OPTION == option){
-            
+
+        if (JFileChooser.APPROVE_OPTION == option) {
+
             file = choice.getSelectedFile();
             FileReader read = null;
             try {
@@ -174,9 +171,9 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             reader = new BufferedReader(read);
             int i = 0;
             String line = "";
-            
+
             try {
-                while(reader.ready()){
+                while (reader.ready()) {
                     line += i;
                     line += "     ";
                     line += reader.readLine();
@@ -198,15 +195,14 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
 
         // TODO add your handling code here:
-        
         try {
-            BufferedWriter saida = new BufferedWriter(new FileWriter("C://Users//sergio.junior//Desktop/Codigo.txt"));
+            BufferedWriter saida = new BufferedWriter(new FileWriter("/Users/Sergio/Desktop/Programa.txt"));
             saida.write(comando);
             saida.close();
         } catch (IOException e) {
             System.out.println("Erro ao gravar o arquivo\n");
         }
-        
+
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     /**
@@ -216,7 +212,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -247,8 +243,7 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                 }
             }
         });
-        
-        
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -265,31 +260,28 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void analisadorSintatico() throws IOException {
-        
+
         token = lexico.getToken();
-        
-        if("Sprograma".equals(token.getSimbolo())){
-            
+
+        if ("Sprograma".equals(token.getSimbolo())) {
+
             nivel = 0;
             token = lexico.getToken();
-            
-            //Geracao
+
             comando = "    " + "START   " + "    " + "    " + "\n";
-            
-            if("Sidentificador".equals(token.getSimbolo())){
-                
-                //SEMANTICO
+
+            if ("Sidentificador".equals(token.getSimbolo())) {
+
                 insertTab(token.getLexema(), "nomedeprograma", nivel);
                 token = lexico.getToken();
-                
-                if("Sponto_virgula".equals(token.getSimbolo())){
+
+                if ("Sponto_virgula".equals(token.getSimbolo())) {
                     analisaBloco();
 
-                    if("Sponto".equals(token.getSimbolo())){
+                    if ("Sponto".equals(token.getSimbolo())) {
                         imprimirTabSimb();
                         qtdRemovida = removerVarPro();
-                        
-                        //Geracao
+
                         if (qtdRemovida > 0) {
                             topo = topo - qtdRemovida;
                             PosMemoria = PosMemoria - qtdRemovida;
@@ -297,570 +289,621 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
                         }
 
                         comando = comando + "    " + "HLT     " + "    " + "    " + "\n";
-                        
+
                         jTextArea2.setText("Compilado com sucesso.");
                         System.out.println("\n\n");
-                    }else
+                    } else {
                         jTextArea2.setText("Erro linha" + lexico.getLinha() + ":'.' esperado.");
-                }else
+                    }
+                } else {
                     jTextArea2.setText("Erro linha" + lexico.getLinha() + ":';' esperado.");
-            }else
+                }
+            } else {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-        }else
+            }
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Palavra reservada 'programa' esperada.");
+        }
     }
 
     private void analisaBloco() throws IOException {
-        
+
         token = lexico.getToken();
-        
+
         analisaEtVariaveis();
         analisaSubRotinas();
         analisaComandos();
     }
 
     private void analisaEtVariaveis() throws IOException {
-        
-        if("Svar".equals(token.getSimbolo())){
-            
+
+        if ("Svar".equals(token.getSimbolo())) {
+
             token = lexico.getToken();
-            
-            if("Sidentificador".equals(token.getSimbolo())){
-                
-                while("Sidentificador".equals(token.getSimbolo())){
+
+            if ("Sidentificador".equals(token.getSimbolo())) {
+
+                while ("Sidentificador".equals(token.getSimbolo())) {
                     analisaVariaveis();
-                    if("Sponto_virgula".equals(token.getSimbolo()))
+                    if ("Sponto_virgula".equals(token.getSimbolo())) {
                         token = lexico.getToken();
-                    else
+                    } else {
                         jTextArea2.setText("Erro linha" + lexico.getLinha() + ":';' esperado.");
+                    }
                 }
-            }else
+            } else {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
+            }
         }
     }
 
     private void analisaVariaveis() throws IOException {
-        
-        do{
-            if("Sidentificador".equals(token.getSimbolo())){
-                
-                //SEMANTICO
-                if(pesquisaDuplicVar(token.getLexema(), nivel))
+
+        do {
+            if ("Sidentificador".equals(token.getSimbolo())) {
+
+                if (pesquisaDuplicVar(token.getLexema(), nivel)) {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ": Variavel de mesmo nome declarada.");
-                else{
+                } else {
                     insertTab(token.getLexema(), "variavel", nivel);
                     token = lexico.getToken();
                     qtdVar++;
-                    if("Svirgula".equals(token.getSimbolo()) || "Sdoispontos".equals(token.getSimbolo())){
+                    if ("Svirgula".equals(token.getSimbolo()) || "Sdoispontos".equals(token.getSimbolo())) {
 
-                        if("Svirgula".equals(token.getSimbolo())){
+                        if ("Svirgula".equals(token.getSimbolo())) {
                             token = lexico.getToken();
 
-                            if("Sdoispontos".equals(token.getSimbolo()))
+                            if ("Sdoispontos".equals(token.getSimbolo())) {
                                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + "':' nao esperado.");
+                            }
                         }
-                    }else
+                    } else {
                         jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":',' ou ':' esperado.");
+                    }
                 }
-            }else
+            } else {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-        }while(!"Sdoispontos".equals(token.getSimbolo()));
-        
-        //Geracao
+            }
+        } while (!"Sdoispontos".equals(token.getSimbolo()));
+
         comando = comando + "    " + "ALLOC    " + topo + "   " + qtdVar + "   " + "\n";
 
         topo = qtdVar + topo;
         qtdVar = 0;
-        
+
         token = lexico.getToken();
         analisaTipo();
     }
 
     private void analisaTipo() throws IOException {
-        
-        if((!"Sinteiro".equals(token.getSimbolo())) && (!"Sbooleano".equals(token.getSimbolo())))
-            jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Tipo nao suportado."); 
-        
-        else
+
+        if ((!"Sinteiro".equals(token.getSimbolo())) && (!"Sbooleano".equals(token.getSimbolo()))) {
+            jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Tipo nao suportado.");
+        } else {
             colocaTipo(token.getSimbolo());
- 
+        }
+
         token = lexico.getToken();
     }
 
     private void analisaSubRotinas() throws IOException {
-        
+
         int rotuloInicio = 0;
-        flag = false;
-        
-        if("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())){
-            
-            //Geracao
+        boolean flag = false;
+
+        if ("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())) {
+
             comando = comando + "    " + "JMP     " + "L" + rotulo + "    " + "    " + "\n";
             rotuloInicio = rotulo;
             rotulo = rotulo + 1;
             flag = true;
         }
-        
-        while("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())){
-            
-            //Geracao
+
+        while ("Sprocedimento".equals(token.getSimbolo()) || "Sfuncao".equals(token.getSimbolo())) {
+
             comando = comando + "L" + rotulo + "  NULL    " + "    " + "    " + "\n";
-            
-            if("Sprocedimento".equals(token.getSimbolo()))
+
+            if ("Sprocedimento".equals(token.getSimbolo())) {
                 analisaDecProcedimento();
-            else
+            } else {
                 analisaDecFuncao();
-            
-            if("Sponto_virgula".equals(token.getSimbolo()))
+            }
+
+            if ("Sponto_virgula".equals(token.getSimbolo())) {
                 token = lexico.getToken();
-            else
-                jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":';' esperado."); 
+            } else {
+                jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":';' esperado.");
+            }
         }
-        
-        //Geracao
-        if (flag)
+
+        if (flag) {
             comando = comando + "L" + rotuloInicio + "  NULL    " + "    " + "    " + "\n";
+        }
     }
 
     private void analisaDecProcedimento() throws IOException {
-        
+
         token = lexico.getToken();
-        
-        if("Sidentificador".equals(token.getSimbolo())){
-            if(pesquisaDuplicVar(token.getLexema(), nivel))
+
+        if ("Sidentificador".equals(token.getSimbolo())) {
+            if (pesquisaDuplicVar(token.getLexema(), nivel)) {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Variavel de mesmo nome declarado.");
-            else{
-                //SEMANTICO
+            } else {
+
                 insertTab(token.getLexema(), "procedimento", nivel);
-                
-                rotulo = rotulo + 1;//Geracao
-                
+
+                rotulo = rotulo + 1;
+
                 colocaTipo("procedimento");
-                
+
                 token = lexico.getToken();
-                
-                if("Sponto_virgula".equals(token.getSimbolo())){
+
+                if ("Sponto_virgula".equals(token.getSimbolo())) {
                     nivel += 1;
                     analisaBloco();
                     nivel -= 1;
                     qtdRemovida = removerVar(nivel);
-                }else
+
+                    if (qtdRemovida > 0) {
+                        topo = topo - qtdRemovida;
+                        PosMemoria = PosMemoria - qtdRemovida;
+                        comando = comando + "    " + "DALLOC  " + topo + "    " + qtdRemovida + "\n";
+                    }
+                    comando = comando + "    " + "RETURN  " + "    " + "    " + "\n";
+
+                } else {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":';' esperado.");
+                }
             }
-        }else
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-            
+        }
+
     }
 
     private void analisaDecFuncao() throws IOException {
-        
+
         token = lexico.getToken();
-        //nivel = "L";
-        
-        if("Sidentificador".equals(token.getSimbolo())){
-            
-            if(pesquisaDuplicVar(token.getLexema(), nivel))
+
+        if ("Sidentificador".equals(token.getSimbolo())) {
+
+            if (pesquisaDuplicVar(token.getLexema(), nivel)) {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Variavel de mesmo nome declarado.");
-            else{
-                //SEMANTICO
+            } else {
+
                 insertTab(token.getLexema(), "funcao", nivel);
-                
+
                 token = lexico.getToken();
-                
-                if("Sdoispontos".equals(token.getSimbolo())){
-                    
+
+                if ("Sdoispontos".equals(token.getSimbolo())) {
+
                     token = lexico.getToken();
-                    
-                    if("Sinteiro".equals(token.getSimbolo()) || "Sbooleano".equals(token.getSimbolo())){
-                        
+
+                    if ("Sinteiro".equals(token.getSimbolo()) || "Sbooleano".equals(token.getSimbolo())) {
+
                         rotulo = rotulo + 1;
                         colocaTipo(token.getSimbolo());
-                        
+
                         token = lexico.getToken();
-                        
-                        if("Sponto_virgula".equals(token.getSimbolo())){
-                            //SEMANTICO
+
+                        if ("Sponto_virgula".equals(token.getSimbolo())) {
+
                             nivel += 1;
                             analisaBloco();
                             nivel -= 1;
                             qtdRemovida = removerVar(nivel);
+
+                            if (qtdRemovida > 0) {
+                                topo = topo - qtdRemovida;
+                                PosMemoria = PosMemoria - qtdRemovida;
+                                comando = comando + "    " + "RETURNF " + topo + "    " + qtdRemovida + "\n";
+                            } else {
+                                comando = comando + "    " + "RETURNF  " + "    " + "    " + "\n";
+                            }
+
                         }
                     }
-                }else
+                } else {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ": ':' esperado.");
+                }
             }
-        }else
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-        //DESEMPILHA
+        }
+
     }
 
     private void analisaComandos() throws IOException {
-        
-        if("Sinicio".equals(token.getSimbolo())){
-            
+
+        if ("Sinicio".equals(token.getSimbolo())) {
+
             token = lexico.getToken();
             analisaComandoSimples();
-            
-            while(!"Sfim".equals(token.getSimbolo())){
-                
-                if("Sponto_virgula".equals(token.getSimbolo())){
+
+            while (!"Sfim".equals(token.getSimbolo())) {
+
+                if ("Sponto_virgula".equals(token.getSimbolo())) {
                     token = lexico.getToken();
-                    
-                    if(!"Sfim".equals(token.getSimbolo()))
+
+                    if (!"Sfim".equals(token.getSimbolo())) {
                         analisaComandoSimples();
-                }else
+                    }
+                } else {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":';' esperado.");
+                }
             }
             token = lexico.getToken();
-        }else
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Palavra reservada 'inicio' esperada.");
+        }
     }
 
     private void analisaComandoSimples() throws IOException {
-        
+
         switch (token.getSimbolo()) {
-        case "Sidentificador":
-            analisaAtribChProc();
-            break;
-        case "Sse":
-            analisaSe();
-            break;
-        case "Senquanto":
-            analisaEnquanto();
-            break;
-        case "Sleia":
-            analisaLeia();
-            break;
-        case "Sescreva":
-            analisaEscreva();
-            break;
-        default:
-            analisaComandos();
-            break;
+            case "Sidentificador":
+                analisaAtribChProc();
+                break;
+            case "Sse":
+                analisaSe();
+                break;
+            case "Senquanto":
+                analisaEnquanto();
+                break;
+            case "Sleia":
+                analisaLeia();
+                break;
+            case "Sescreva":
+                analisaEscreva();
+                break;
+            default:
+                analisaComandos();
+                break;
         }
     }
 
     private void analisaAtribChProc() throws IOException {
+
         aux = token;
-        
+
         token = lexico.getToken();
-        
-        if("Satribuicao".equals(token.getSimbolo()))
+
+        if ("Satribuicao".equals(token.getSimbolo())) {
             analisaAtribuicao(aux);
-        else
+        } else {
+
+            Simbolo s = getSimbolo(aux.getLexema());
+            if (s != null) {
+                comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "    " + "\n";
+            } else {
+                jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Chamada de procedimento nao pode ser feita.");
+            }
+
             chamadaProcedimento();
+        }
     }
 
     private void analisaLeia() throws IOException {
-        
+
         token = lexico.getToken();
-        
-        if("Sabre_parenteses".equals(token.getSimbolo())){
+
+        if ("Sabre_parenteses".equals(token.getSimbolo())) {
             token = lexico.getToken();
-            
-            if("Sidentificador".equals(token.getSimbolo())){
-                
-                    Simbolo simb = getSimbolo(token.getLexema());
-                    if("Sinteiro".equals(simb.getTipo())){
-                        comando = comando + "    " + "RD      " + "    " + "    " + "\n";
-                        comando = comando + "    " + "STR     " + simb.getEndereco() + "    " + "\n";
-                    }else
-                        jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Leia com tipo nao esperado.");
-                    
+
+            if ("Sidentificador".equals(token.getSimbolo())) {
+
+                Simbolo simb = getSimbolo(token.getLexema());
+                if ("Sinteiro".equals(simb.getTipo())) {
+                    comando = comando + "    " + "RD      " + "    " + "    " + "\n";
+                    comando = comando + "    " + "STR     " + simb.getEndereco() + "    " + "\n";
+                } else {
+                    jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Leia com tipo nao esperado.");
+                }
+
+                token = lexico.getToken();
+
+                if ("Sfecha_parenteses".equals(token.getSimbolo())) {
                     token = lexico.getToken();
-                    
-                    if("Sfecha_parenteses".equals(token.getSimbolo()))
-                        token = lexico.getToken();
-                    else
-                        jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":')' esperado.");
-            }else
+                } else {
+                    jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":')' esperado.");
+                }
+            } else {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-        }else
+            }
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":'(' esperado.");
+        }
     }
 
     private void analisaEscreva() throws IOException {
-        
+
         token = lexico.getToken();
-        
-        if("Sabre_parenteses".equals(token.getSimbolo())){
+
+        if ("Sabre_parenteses".equals(token.getSimbolo())) {
             token = lexico.getToken();
-            
-            if("Sidentificador".equals(token.getSimbolo())){
-                
+
+            if ("Sidentificador".equals(token.getSimbolo())) {
+
                 Simbolo simb = getSimbolo(token.getLexema());
-                if("Sinteiro".equals(simb.getTipo())){
+                if ("Sinteiro".equals(simb.getTipo())) {
                     comando = comando + "    " + "LDV     " + simb.getEndereco() + "    " + "\n";
                     comando = comando + "    " + "PRN     " + "    " + "    " + "\n";
-                }else
+                } else {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Leia com tipo nao esperado.");
+                }
 
                 token = lexico.getToken();
-                
-                if("Sfecha_parenteses".equals(token.getSimbolo()))
+
+                if ("Sfecha_parenteses".equals(token.getSimbolo())) {
                     token = lexico.getToken();
-                else
+                } else {
                     jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":')' esperado.");
-            }else
+                }
+            } else {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Identificador esperado.");
-        }else
+            }
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":'(' esperado.");
+        }
     }
 
     private void analisaEnquanto() throws IOException {
-        
-        //Geracao
+
         int auxrot1, auxrot2;
         auxrot1 = rotulo;
-        
+
         comando = comando + "L" + rotulo + "  NULL    " + "    " + "    " + "\n";
-        
+
         rotulo = rotulo + 1;
-        
+
         token = lexico.getToken();
         analisaExpressao();
-        
+
         pos = posFixa();
-        
-        for(int i = 0; expressao.size() > 0;i++)
+
+        for (int i = 0; expressao.size() > 0; i++) {
             expressao.removeFirst();
-        
+        }
+
         removeParenteses();
-        
-        for(int i = 0;i<pos.size();i++)
+
+        for (int i = 0; i < pos.size(); i++) {
             System.out.println(pos.get(i));
-                
+        }
+
         gerarCodPosFixa();
-        
-        if("Sfaca".equals(token.getSimbolo())){
-            
-            //Geracao
+
+        if ("Sfaca".equals(token.getSimbolo())) {
+
             auxrot2 = rotulo;
             comando = comando + "    " + "JMPF    " + "L" + rotulo + "    " + "    " + "\n";
             rotulo = rotulo + 1;
-            
+
             token = lexico.getToken();
             analisaComandoSimples();
-            
-            //Geracao
+
             comando = comando + "    " + "JMP      " + "L" + auxrot1 + "    " + "    " + "\n";
             comando = comando + "L" + auxrot2 + "  NULL    " + "    " + "    " + "\n";
         }
     }
 
     private void analisaSe() throws IOException {
-        
+
         token = lexico.getToken();
         analisaExpressao();
-        
+
         pos = posFixa();
-        
-        for(int i = 0; expressao.size() > 0;i++)
+
+        for (int i = 0; expressao.size() > 0; i++) {
             expressao.removeFirst();
-        
+        }
+
         removeParenteses();
-        
-        for(int i = 0;i<pos.size();i++)
+
+        for (int i = 0; i < pos.size(); i++) {
             System.out.println(pos.get(i));
-        
+        }
+
         gerarCodPosFixa();
-        
-        //Geracao
-        int jmpf = this.rotulo;
+
+        int jmpf = rotulo;
         comando = comando + "    " + "JMPF    " + "L" + jmpf + "    " + "\n";
         rotulo = rotulo + 1;
-        
-        if("Sentao".equals(token.getSimbolo())){
+
+        if ("Sentao".equals(token.getSimbolo())) {
             token = lexico.getToken();
             analisaComandoSimples();
-            
-            if("Ssenao".equals(token.getSimbolo())){
-                
-                //Geracao
-                int jmp = this.rotulo;
+
+            if ("Ssenao".equals(token.getSimbolo())) {
+
+                int jmp = rotulo;
                 comando = comando + "    " + "JMP     " + "L" + jmp + "    " + "\n";
                 rotulo = rotulo + 1;
                 comando = comando + "L" + jmpf + "  NULL    " + "    " + "    " + "\n";
-                //FIM Geracao
-                
+
                 token = lexico.getToken();
                 analisaComandoSimples();
-                
-                //Geracao
+
                 comando = comando + "L" + jmp + "  NULL    " + "    " + "    " + "\n";
-            }else
-                //Geracao
+            } else {
                 comando = comando + "L" + jmpf + "  NULL    " + "    " + "    " + "\n";
-        }else
+            }
+        } else {
             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":Palavra reservada 'entao' esperado.");
+        }
     }
 
     private void analisaExpressao() throws IOException {
-        
+
         analisaExpressaoSimples();
-        
-        if("Smaior".equals(token.getSimbolo()) || "Smaiorig".equals(token.getSimbolo()) || "Sig".equals(token.getSimbolo()) || "Smenor".equals(token.getSimbolo()) || "Smenorig".equals(token.getSimbolo()) || "Sdif".equals(token.getSimbolo())){
-            addExpressao(token.getLexema(), token.getSimbolo(), "4");//Semantico
+
+        if ("Smaior".equals(token.getSimbolo()) || "Smaiorig".equals(token.getSimbolo()) || "Sig".equals(token.getSimbolo()) || "Smenor".equals(token.getSimbolo()) || "Smenorig".equals(token.getSimbolo()) || "Sdif".equals(token.getSimbolo())) {
+            addExpressao(token.getLexema(), token.getSimbolo(), "4");
             token = lexico.getToken();
             analisaExpressaoSimples();
         }
-                   
+
     }
 
     private void analisaExpressaoSimples() throws IOException {
-        
-        if("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo())){
-            addExpressao(token.getLexema(), token.getSimbolo(), "0");//Semantico
+
+        if ("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo())) {
+            addExpressao(token.getLexema(), token.getSimbolo(), "0");
             token = lexico.getToken();
         }
         analisaTermo();
-        
-        while("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo()) || "Sou".equals(token.getSimbolo())){
-            if("Sou".equals(token.getSimbolo()))
-                addExpressao(token.getLexema(), token.getSimbolo(), "5");//Semantico
-            else
-                addExpressao(token.getLexema(), token.getSimbolo(), "3");//Semantico
+
+        while ("Smais".equals(token.getSimbolo()) || "Smenos".equals(token.getSimbolo()) || "Sou".equals(token.getSimbolo())) {
+            if ("Sou".equals(token.getSimbolo())) {
+                addExpressao(token.getLexema(), token.getSimbolo(), "5");
+            } else {
+                addExpressao(token.getLexema(), token.getSimbolo(), "3");
+            }
             token = lexico.getToken();
             analisaTermo();
         }
     }
 
     private void analisaTermo() throws IOException {
-        
+
         analisaFator();
-        
-        while("Smult".equals(token.getSimbolo()) || "Sdiv".equals(token.getSimbolo()) || "Se".equals(token.getSimbolo())){
-            if("Se".equals(token.getSimbolo()))
-                addExpressao(token.getLexema(), token.getSimbolo(), "5");//Semantico
-            else
-                addExpressao(token.getLexema(), token.getSimbolo(), "2");//Semantico
+
+        while ("Smult".equals(token.getSimbolo()) || "Sdiv".equals(token.getSimbolo()) || "Se".equals(token.getSimbolo())) {
+            if ("Se".equals(token.getSimbolo())) {
+                addExpressao(token.getLexema(), token.getSimbolo(), "5");
+            } else {
+                addExpressao(token.getLexema(), token.getSimbolo(), "2");
+            }
             token = lexico.getToken();
             analisaFator();
         }
     }
 
     private void analisaFator() throws IOException {
-        
-        if("Sidentificador".equals(token.getSimbolo())){
+
+        if ("Sidentificador".equals(token.getSimbolo())) {
             String f = seFuncao(token.getSimbolo());
-            
-            if("funcao".equals(f))
-                addExpressao(token.getLexema(), "funcao", "1");//Semantico
-            else if ("procedimento".equals(f))
+
+            if ("funcao".equals(f)) {
+                addExpressao(token.getLexema(), "funcao", "1");
+            } else if ("procedimento".equals(f)) {
                 jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":procedimento dentro de expressao.");
-            else
-                addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
-            
-            analisaChamadaFuncao();
-            token = lexico.getToken(); 
-        }else{
-            if("Snumero".equals(token.getSimbolo())){
-                addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
-                token = lexico.getToken();
+            } else {
+                addExpressao(token.getLexema(), token.getSimbolo(), "1");
             }
-            else{
-                if("Snao".equals(token.getSimbolo())){
-                    addExpressao(token.getLexema(), token.getSimbolo(), "0");//Semantico
+
+            analisaChamadaFuncao();
+            token = lexico.getToken();
+        } else {
+            if ("Snumero".equals(token.getSimbolo())) {
+                addExpressao(token.getLexema(), token.getSimbolo(), "1");
+                token = lexico.getToken();
+            } else {
+                if ("Snao".equals(token.getSimbolo())) {
+                    addExpressao(token.getLexema(), token.getSimbolo(), "0");
                     token = lexico.getToken();
                     analisaFator();
-                }else{
-                    if("Sabre_parenteses".equals(token.getSimbolo())){
-                        addExpressao(token.getLexema(), token.getSimbolo(), "6");//Semantico
+                } else {
+                    if ("Sabre_parenteses".equals(token.getSimbolo())) {
+                        addExpressao(token.getLexema(), token.getSimbolo(), "6");
                         token = lexico.getToken();
                         analisaExpressao();
-                        
-                        if("Sfecha_parenteses".equals(token.getSimbolo())){
-                            addExpressao(token.getLexema(), token.getSimbolo(), "7");//Semantico
+
+                        if ("Sfecha_parenteses".equals(token.getSimbolo())) {
+                            addExpressao(token.getLexema(), token.getSimbolo(), "7");
                             token = lexico.getToken();
-                        }
-                        else
+                        } else {
                             jTextArea2.setText("Erro linha:" + lexico.getLinha() + ":')' esperado.");
-                    }else{
-                        if("verdadeiro".equals(token.getLexema()) || "falso".equals(token.getLexema())){
-                            addExpressao(token.getLexema(), token.getSimbolo(), "1");//Semantico
-                            token = lexico.getToken();
                         }
-                        else
+                    } else {
+                        if ("verdadeiro".equals(token.getLexema()) || "falso".equals(token.getLexema())) {
+                            addExpressao(token.getLexema(), token.getSimbolo(), "1");
+                            token = lexico.getToken();
+                        } else {
                             jTextArea2.setText("Erro linha:" + lexico.getLinha() + "ERRO.");
+                        }
                     }
-                        
+
                 }
-                    
+
             }
         }
     }
 
     private void analisaAtribuicao(Token aux) throws IOException {
-        
+
         Simbolo s = getSimbolo(aux.getLexema());
-        
+
         token = lexico.getToken();
         analisaExpressao();
         pos = posFixa();
-        
-        for(int i = 0; expressao.size() > 0;i++)
+
+        for (int i = 0; expressao.size() > 0; i++) {
             expressao.removeFirst();
-        
+        }
+
         removeParenteses();
-        
+
         gerarCodPosFixa();
-        
-        for(int i = 0;i<pos.size();i++)
+
+        for (int i = 0; i < pos.size(); i++) {
             System.out.println(pos.get(i));
-        
-        if (!"funcao".equals(s.getEscopo()))
+        }
+
+        if (!"funcao".equals(s.getEscopo())) {
             comando = comando + "    " + "STR     " + s.getEndereco() + "    " + "\n";
-        
+        }
+
     }
 
     private void chamadaProcedimento() {
-        
-        
+
     }
 
     private void analisaChamadaFuncao() {
-        
-        
+
     }
 
     private void insertTab(String lexema, String escopo, int nivel) {
-        
+
         simbolo = new Simbolo();
-        
+
         simbolo.setLexema(lexema);
         simbolo.setEscopo(escopo);
         simbolo.setNivel(nivel);
         simbolo.setPosProcFunc(rotulo);
-        
-        switch(escopo){
-            
+
+        switch (escopo) {
+
             case "nomedeprograma":
                 simbolo.setTipo("programa");
-                
+                break;
+
             case "variavel":
                 simbolo.setEndereco(PosMemoria);
                 PosMemoria++;
-        }   
-        
+                break;
+        }
+
         tabSimb.add(simbolo);
     }
 
     private boolean pesquisaDuplicVar(String lexema, int nivel) {
-        
+
         boolean duplicado = false;
 
-        for (int i = 0; i< tabSimb.size(); i++) {
+        for (int i = 0; i < tabSimb.size(); i++) {
             if ((lexema.equals(tabSimb.get(i).getLexema()) && tabSimb.get(i).getNivel() == nivel)) {
                 duplicado = true;
                 return duplicado;
-            }            
+            }
         }
-        
+
         return duplicado;
     }
 
     private void colocaTipo(String simbolo) {
-        
+
         for (Simbolo tabSimb1 : tabSimb) {
             if (tabSimb1.getTipo() == null) {
                 tabSimb1.setTipo(simbolo);
@@ -877,17 +920,17 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     }
 
     private int removerVar(int nivel) {
-        
+
         int i = tabSimb.size() - 1;
         qtdRemovida = 0;
         imprimirTabSimb();
-        while(tabSimb.get(i).getNivel() > nivel){
-            if("variavel".equals(tabSimb.get(i).getEscopo())){
+        while (tabSimb.get(i).getNivel() > nivel) {
+            if ("variavel".equals(tabSimb.get(i).getEscopo())) {
                 tabSimb.remove(i);
                 qtdRemovida++;
-            }else
-                if(tabSimb.get(i).getNivel() > nivel && !"variavel".equals(tabSimb.get(i).getEscopo()))
-                    tabSimb.remove(i);
+            } else if (tabSimb.get(i).getNivel() > nivel && !"variavel".equals(tabSimb.get(i).getEscopo())) {
+                tabSimb.remove(i);
+            }
             i--;
         }
         return qtdRemovida;
@@ -896,34 +939,35 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     private int removerVarPro() {
         qtdRemovida = 0;
         imprimirTabSimb();
-        while(tabSimb.size() > 0){
-            if("variavel".equals(tabSimb.getFirst().getEscopo())){
+        while (tabSimb.size() > 0) {
+            if ("variavel".equals(tabSimb.getFirst().getEscopo())) {
                 tabSimb.removeFirst();
                 qtdRemovida++;
-            }else
+            } else {
                 tabSimb.removeFirst();
+            }
         }
         return qtdRemovida;
     }
 
     private Simbolo getSimbolo(String lexema) {
-        
+
         Simbolo simb = null;
         int i = tabSimb.size() - 1;
-        
-        while(i>0){
-            if(lexema.equals(tabSimb.get(i).getLexema())){
+
+        while (i > 0) {
+            if (lexema.equals(tabSimb.get(i).getLexema())) {
                 simb = tabSimb.get(i);
                 break;
             }
             i--;
         }
-        
+
         return simb;
     }
 
     private String seFuncao(String token) {
-        
+
         int i = 0;
         String retorna = null;
 
@@ -939,43 +983,43 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
     }
 
     private void addExpressao(String lexema, String tipo, String peso) {
-        
+
         Simbolo s = new Simbolo();
 
         s.setLexema(lexema);
         s.setTipo(tipo);
 
-        if (null != peso)
+        if (null != peso) {
             switch (peso) {
-            case "0":
-                s.setId(0);
-                break;
-            case "1":
-                s.setId(1);
-                break;
-            case "2":
-                s.setId(2);
-                break;
-            case "3":
-                s.setId(3);
-                break;
-            case "4":
-                s.setId(4);
-                break;
-            case "5":
-                s.setId(5);
-                break;
-            case "6":
-                s.setId(6);
-                break;
-            case "7":
-                s.setId(7);
-                break;
-            case " ":
-                s.setId(8);
-                break;
+                case "0":
+                    s.setId(0);
+                    break;
+                case "1":
+                    s.setId(1);
+                    break;
+                case "2":
+                    s.setId(2);
+                    break;
+                case "3":
+                    s.setId(3);
+                    break;
+                case "4":
+                    s.setId(4);
+                    break;
+                case "5":
+                    s.setId(5);
+                    break;
+                case "6":
+                    s.setId(6);
+                    break;
+                case "7":
+                    s.setId(7);
+                    break;
+                case " ":
+                    s.setId(8);
+                    break;
+            }
         }
-        
 
         expressao.add(s);
 
@@ -989,43 +1033,43 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             System.out.print(expressao1.getLexema());
         }
         System.out.print("\n\n");
-        
-        Simbolo s;
-    	int i = 0;
 
-    	while (i < expressao.size()) {
+        Simbolo s;
+        int i = 0;
+
+        while (i < expressao.size()) {
 
             s = expressao.get(i);
 
             if (s.getId() == 1) {
                 posFixa.add(s);
-            }else if (s.getId() != -1) {
-            while (pilha.size() > 0 && (s.getId() < pilha.getLast().getId()) && (s.getId() != 6)) {
+            } else if (s.getId() != -1) {
+                while (pilha.size() > 0 && (s.getId() < pilha.getLast().getId()) && (s.getId() != 6)) {
                     posFixa.add(pilha.getLast());
                     pilha.removeLast();
-            }
-            pilha.addLast(s);
+                }
+                pilha.addLast(s);
             }
             i++;
-    	}
+        }
 
-    	while (pilha.size() > 0) {
-        	posFixa.add(pilha.getLast());
-        	pilha.removeLast();
-    	}
-        
-    	i = 0;
-    	while (i < posFixa.size()) {
+        while (pilha.size() > 0) {
+            posFixa.add(pilha.getLast());
+            pilha.removeLast();
+        }
+
+        i = 0;
+        while (i < posFixa.size()) {
             System.out.println(posFixa.get(i).getLexema());
-   	 
-    	i++;
+
+            i++;
         }
 
         return posFixa;
     }
 
     private void removeParenteses() {
-        
+
         int i = 0;
         while (i < pos.size()) {
             if ((pos.get(i).getId() == 6 && "Sabre_parenteses".equals(pos.get(i).getTipo())) || (pos.get(i).getId() == 7 && "Sfecha_parenteses".equals(pos.get(i).getTipo()))) {
@@ -1035,78 +1079,76 @@ public class AnalisadorSintatico extends javax.swing.JFrame {
             i++;
         }
 
-        
     }
 
     private void gerarCodPosFixa() {
-        
+
         int i;
         if (pos.size() == 1) {
-            if ("Snumero".equals(pos.getFirst().getTipo()))
+            if ("Snumero".equals(pos.getFirst().getTipo())) {
                 comando = comando + "    " + "LDC     " + pos.getFirst().getLexema() + "  " + "    " + "\n";
-            else if ("funcao".equals(pos.getFirst().getTipo())) {
+            } else if ("funcao".equals(pos.getFirst().getTipo())) {
                 Simbolo s = getSimbolo(pos.getFirst().getLexema());
                 comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
-            }else if ("procedimento".equals(pos.getFirst().getTipo())){
+            } else if ("procedimento".equals(pos.getFirst().getTipo())) {
                 Simbolo s = getSimbolo(pos.getFirst().getLexema());
                 comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
             } else if ("Sidentificador".equals(pos.getFirst().getTipo())) {
                 Simbolo s = getSimbolo(pos.getFirst().getLexema());
                 comando = comando + "    " + "LDV     " + s.getEndereco() + "  " + "    " + "\n";
-            } else if ("Sverdadeiro".equals(pos.getFirst().getTipo()))
+            } else if ("Sverdadeiro".equals(pos.getFirst().getTipo())) {
                 comando = comando + "    " + "LDC     " + 1 + "  " + "    " + "\n";
-            else if ("Sfalso".equals(pos.getFirst().getTipo()))
+            } else if ("Sfalso".equals(pos.getFirst().getTipo())) {
                 comando = comando + "    " + "LDC     " + 0 + "  " + "    " + "\n";
+            }
         } else {
             i = 0;
             while (i < pos.size()) {
-                if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3)
+                if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3) {
                     comando = comando + "    " + "ADD     " + "    " + "    " + "\n";
-                else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3)
+                } else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 3) {
                     comando = comando + "    " + "SUB     " + "    " + "    " + "\n";
-                else if ("*".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2)
+                } else if ("*".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2) {
                     comando = comando + "    " + "MULT     " + "    " + "    " + "\n";
-                else if ("div".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2)
+                } else if ("div".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 2) {
                     comando = comando + "    " + "DIVI     " + "    " + "    " + "\n";
-                else if ("<".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if ("<".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CME     " + "    " + "    " + "\n";
-                else if ("<=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if ("<=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CMEQ     " + "    " + "    " + "\n";
-                else if (">".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if (">".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CMA     " + "    " + "    " + "\n";
-                else if (">=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if (">=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CMAQ     " + "    " + "    " + "\n";
-                else if ("=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if ("=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CEQ     " + "    " + "    " + "\n";
-                else if ("!=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4)
+                } else if ("!=".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 4) {
                     comando = comando + "    " + "CDIF     " + "    " + "    " + "\n";
-                else if ("e".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5)
+                } else if ("e".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5) {
                     comando = comando + "    " + "AND     " + "    " + "    " + "\n";
-                else if ("ou".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5)
+                } else if ("ou".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 5) {
                     comando = comando + "    " + "OR      " + "    " + "    " + "\n";
-                else if ("nao".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                } else if ("nao".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0) {
                     comando = comando + "    " + "NEG     " + "    " + "    " + "\n";
-                else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                } else if ("-".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0) {
                     comando = comando + "    " + "INV     " + "    " + "    " + "\n";
-                else if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0)
+                } else if ("+".equals(pos.get(i).getLexema()) && pos.get(i).getId() == 0) {
                     comando = comando + "    " + "INV     " + "    " + "    " + "\n";
-                else if ("Sidentificador".equals(pos.get(i).getTipo())){
+                } else if ("Sidentificador".equals(pos.get(i).getTipo())) {
                     Simbolo s = getSimbolo(pos.get(i).getLexema());
                     comando = comando + "    " + "LDV     " + s.getEndereco() + "  " + "    " + "\n";
-                } else if ("Snumero".equals(pos.get(i).getTipo()))
+                } else if ("Snumero".equals(pos.get(i).getTipo())) {
                     comando = comando + "    " + "LDC     " + pos.get(i).getLexema() + "  " + "    " + "\n";
-                else if ("funcao".equals(pos.get(i).getTipo())){
+                } else if ("funcao".equals(pos.get(i).getTipo())) {
                     Simbolo s = getSimbolo(pos.get(i).getLexema());
                     comando = comando + "    " + "CALL    " + "L" + s.getPosProcFunc() + "  " + "    " + "\n";
-                } else if ("Sverdadeiro".equals(pos.get(i).getTipo()))
+                } else if ("Sverdadeiro".equals(pos.get(i).getTipo())) {
                     comando = comando + "    " + "LDC     " + 1 + "  " + "    " + "\n";
-                else if ("Sfalso".equals(pos.get(i).getTipo()))
+                } else if ("Sfalso".equals(pos.get(i).getTipo())) {
                     comando = comando + "    " + "LDC     " + 0 + "  " + "    " + "\n";
+                }
                 i++;
             }
         }
     }
-
-
-    
 }
